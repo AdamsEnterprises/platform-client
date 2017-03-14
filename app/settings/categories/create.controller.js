@@ -30,13 +30,34 @@ function (
     // Change mode
     $scope.$emit('event:mode:change', 'settings');
 
-    $scope.category = { type: 'category', icon: 'tag', color: ''};
+    $scope.getParentName = function () {
+        var parentName = 'Nothing';
+        if ($scope.category.parent_id) {
+            $scope.parents.forEach(function (parent) {
+                if (parent.id === $scope.category.parent_id) {
+                    parentName = parent.tag;
+                }
+            });
+        }
+        return parentName;
+    };
+
+    $scope.category = { type: 'category', icon: 'tag', color: '', parent_id: null};
     $scope.processing = false;
+    // change to parent-query
+    TagEndpoint.query().$promise.then(function (tags) {
+        $scope.parents = [];
+        tags.forEach(function (tag) {
+            if (!tag.parent) {
+                $scope.parents.push(tag);
+            }
+        });
+    });
 
     $scope.saveCategory = function (category, addAnother) {
         $scope.processing = true;
         var whereToNext = 'settings/categories';
-
+        // Update survey_tag-table;
         TagEndpoint.saveCache(category).$promise.then(function (response) {
             if (response.id) {
                 Notify.notify('notify.category.save_success', { name: category.tag });
